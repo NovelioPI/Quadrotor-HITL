@@ -3,7 +3,7 @@ Hardware-in-the-loop Simulation for Quadrotor using ROS and Gazebo
 
 ## Install
 Clone from repository
-$ ```
+```
 git clone --recurse-submodules https://github.com/NovelioPI/Quadrotor-HITL.git
 ```
 Compile ROS
