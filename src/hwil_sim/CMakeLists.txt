@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(simulator_env)
+project(hwil_sim)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,6 +8,8 @@ project(simulator_env)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  hector_uav_msgs
+  roscpp
   rospy
   std_msgs
 )
@@ -69,7 +71,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   hector_uav_msgs#   std_msgs
 # )
 
 ################################################
@@ -102,9 +104,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES simulator_env
-#  CATKIN_DEPENDS rospy std_msgs
+ INCLUDE_DIRS 
+#  LIBRARIES hwil_sim
+ CATKIN_DEPENDS hector_uav_msgs roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -115,14 +117,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
-  ${catkin_INCLUDE_DIRS}
+  include
+  ${catkin_INCLUDE_DIRS}/include/**
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/simulator_env.cpp
-# )
+add_library(communication src/communication.cpp)
+add_library(serial src/serial.cpp)
+add_library(nanopb src/nanopb/hwil.pb.c src/nanopb/pb_common.c src/nanopb/pb_decode.c src/nanopb/pb_encode.c)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -132,7 +134,15 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/simulator_env_node.cpp)
+add_executable(communication_node 
+  src/communication_node.cpp
+  src/communication.cpp
+  src/serial.cpp
+  # src/nanopb/hwil.pb.c
+  # src/nanopb/pb_common.c
+  # src/nanopb/pb_decode.c
+  # src/nanopb/pb_encode.c
+)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -145,9 +155,7 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(communication_node communication serial nanopb ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -178,11 +186,11 @@ include_directories(
 # )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/communication/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
@@ -196,7 +204,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_simulator_env.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_hwil_sim.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
